@@ -1,584 +1,400 @@
-import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithCustomToken, 
-  signInAnonymously, 
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  onSnapshot, 
-  addDoc,
-  updateDoc,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { 
-  User, 
-  BookOpen, 
-  Calendar, 
-  LogOut, 
-  LayoutDashboard, 
-  Settings, 
-  Users, 
-  MessageSquare,
-  ShieldCheck,
-  Briefcase,
-  Mail,
-  Megaphone,
-  Send,
-  Bell,
-  UserCheck,
-  CheckCircle2,
-  XCircle,
-  Search, 
-  Filter, 
-  Clock, 
-  FileText,
-  ChevronRight,
-  ExternalLink,
-  GraduationCap
-} from 'lucide-react';
-
-// --- Firebase Configuration Integrated from User Request ---
-const firebaseConfig = {
-  apiKey: "AIzaSyBOSm_MWyZ1phOXRbPFv28JJ-DGMJB2yoI",
-  authDomain: "buildit-6c866.firebaseapp.com",
-  projectId: "buildit-6c866",
-  storageBucket: "buildit-6c866.firebasestorage.app",
-  messagingSenderId: "38864758161",
-  appId: "1:38864758161:web:a3ca049c03bbe85acbe630",
-  measurementId: "G-LRZX45VTDW"
-};
-
-// Override with environment config if available, otherwise use the integrated one
-const finalConfig = typeof __firebase_config !== 'undefined' 
-  ? JSON.parse(__firebase_config) 
-  : firebaseConfig;
-
-const app = initializeApp(finalConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'buildit-unipath';
-
-/**
- * SHARED UI COMPONENTS
- */
-const Card = ({ children, className = "" }) => (
-  <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>{children}</div>
-);
-
-const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
-  const variants = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100",
-    outline: "border border-slate-200 text-slate-700 hover:bg-slate-50",
-    ghost: "text-slate-500 hover:bg-slate-100",
-    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
-    danger: "bg-red-50 text-red-600 hover:bg-red-100"
-  };
-  return (
-    <button 
-      disabled={disabled}
-      onClick={onClick} 
-      className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${variants[variant]} ${className}`}
-    >
-      {children}
-    </button>
-  );
-};
-
-const CustomTabs = ({ defaultValue, children }) => {
-  const [activeTab, setActiveTab] = useState(defaultValue);
-  return (
-    <div className="space-y-6">
-      <div className="flex bg-slate-100 p-1 rounded-xl w-fit border border-slate-200">
-        {React.Children.map(children, child => {
-          if (child?.type === TabTrigger) {
-            return React.cloneElement(child, { activeTab, setActiveTab });
-          }
-          return null;
-        })}
-      </div>
-      {React.Children.map(children, child => {
-        if (child?.type === TabContent && child.props.value === activeTab) {
-          return child;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniPath Academic Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        return null;
-      })}
-    </div>
-  );
-};
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
 
-const TabTrigger = ({ value, children, activeTab, setActiveTab }) => (
-  <button
-    onClick={() => setActiveTab(value)}
-    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-      activeTab === value ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-    }`}
-  >
-    {children}
-  </button>
-);
-
-const TabContent = ({ children }) => <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">{children}</div>;
-
-/**
- * MENTOR DASHBOARD VIEW
- */
-const MentorDashboard = ({ user, profileData, onLogout }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [announcement, setAnnouncement] = useState("");
-  const [announcements, setAnnouncements] = useState([]);
-  const [requests, setRequests] = useState([]);
-
-  useEffect(() => {
-    if (!user) return;
-    
-    // Fetch Public Announcements
-    const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
-    const unsubAnn = onSnapshot(annCol, (snap) => {
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setAnnouncements(data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
-    }, (err) => console.error("Announcement error:", err));
-
-    // Fetch Incoming Mentor Requests
-    const reqCol = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
-    const unsubReq = onSnapshot(reqCol, (snap) => {
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // In a real app, we'd use a server-side filter, but per Rule 2, we filter in memory
-      setRequests(data.filter(r => r.mentorId === user.uid));
-    }, (err) => console.error("Request error:", err));
-
-    return () => { unsubAnn(); unsubReq(); };
-  }, [user]);
-
-  const handlePost = async () => {
-    if (!announcement.trim() || !user) return;
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'announcements'), {
-        content: announcement,
-        authorId: user.uid,
-        authorName: profileData?.name || 'Mentor',
-        createdAt: serverTimestamp(),
-        date: new Date().toLocaleDateString()
-      });
-      setAnnouncement("");
-      setIsModalOpen(false);
-    } catch (e) { console.error(e); }
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 flex w-full font-sans">
-      <aside className="w-64 bg-white border-r border-slate-200 hidden lg:flex flex-col shrink-0">
-        <div className="p-6">
-          <div className="flex items-center gap-3 text-indigo-600 font-bold text-xl">
-            <UserCheck className="w-8 h-8" />
-            <span>IILM Portal</span>
-          </div>
+    <!-- App Container -->
+    <div id="app">
+        <!-- Loading Spinner -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-600 mb-4"></div>
+            <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">Initializing BuildIt Cloud</p>
         </div>
-        <nav className="flex-1 px-4 space-y-1">
-          <div className="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-600 rounded-lg font-bold cursor-pointer">
-            <LayoutDashboard className="w-5 h-5" /> Dashboard
-          </div>
-          <div className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-lg font-medium cursor-pointer">
-            <Users className="w-5 h-5" /> My Mentees
-          </div>
-          <div className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-lg font-medium cursor-pointer">
-            <MessageSquare className="w-5 h-5" /> Messages
-          </div>
-        </nav>
-        <div className="p-4 border-t">
-          <div onClick={onLogout} className="flex items-center gap-3 px-4 py-3 text-red-500 font-medium cursor-pointer hover:bg-red-50 rounded-lg transition-colors">
-            <LogOut className="w-5 h-5" /> Logout
-          </div>
-        </div>
-      </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-          <h2 className="text-xl font-bold text-slate-800">Mentor Console</h2>
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-slate-900">{profileData?.name}</p>
-              <p className="text-xs text-slate-500 font-medium">{profileData?.title}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold border-2 border-indigo-100 uppercase">
-              {profileData?.name?.[0]}
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-5xl mx-auto space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Faculty Dashboard</h1>
-                <p className="text-slate-500 mt-1 font-medium">Broadcast news and manage mentee interactions.</p>
-              </div>
-              <Button onClick={() => setIsModalOpen(true)} className="h-12 px-6 shadow-lg shadow-indigo-200">
-                <Megaphone className="w-5 h-5" /> Create Announcement
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="p-6">
-                <div className="flex justify-between items-start">
-                  <div><p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Mentees</p><h3 className="text-3xl font-black text-slate-900 mt-1">12</h3></div>
-                  <div className="p-3 rounded-xl bg-indigo-600 text-white shadow-lg"><Users className="w-6 h-6" /></div>
-                </div>
-              </Card>
-              <Card className="p-6">
-                <div className="flex justify-between items-start">
-                  <div><p className="text-slate-400 text-xs font-bold uppercase tracking-widest">New Requests</p><h3 className="text-3xl font-black text-slate-900 mt-1">{requests.length}</h3></div>
-                  <div className="p-3 rounded-xl bg-amber-500 text-white shadow-lg"><Bell className="w-6 h-6" /></div>
-                </div>
-              </Card>
-              <Card className="p-6">
-                <div className="flex justify-between items-start">
-                  <div><p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Broadcasts</p><h3 className="text-3xl font-black text-slate-900 mt-1">{announcements.length}</h3></div>
-                  <div className="p-3 rounded-xl bg-emerald-500 text-white shadow-lg"><Megaphone className="w-6 h-6" /></div>
-                </div>
-              </Card>
-            </div>
-
-            <CustomTabs defaultValue="announcements">
-              <TabTrigger value="requests">Student Requests</TabTrigger>
-              <TabTrigger value="announcements">Past Broadcasts</TabTrigger>
-              <TabContent value="announcements">
-                <div className="space-y-4">
-                  {announcements.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400">No announcements yet.</div>
-                  ) : announcements.map(ann => (
-                    <Card key={ann.id} className="p-0 flex">
-                      <div className="w-2 bg-indigo-600"></div>
-                      <div className="p-6 flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Broadcast</span>
-                          <span className="text-[10px] font-bold text-slate-400">{ann.date}</span>
+        <!-- Role Selection / Login View -->
+        <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-4">
+            <div class="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+                <div class="md:w-1/2 bg-indigo-600 p-12 text-white flex flex-col justify-center">
+                    <div class="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                        <i data-lucide="graduation-cap" class="w-10 h-10"></i>
+                    </div>
+                    <h1 class="text-4xl font-black mb-4 leading-tight">UniPath Academic</h1>
+                    <p class="text-indigo-100 text-lg opacity-90">Securely connected via BuildIt-6c866 Firebase.</p>
+                    <div class="mt-8 pt-8 border-t border-white/20">
+                        <div class="flex items-center gap-3 text-sm font-bold">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i> Verified Institution Portal
                         </div>
-                        <p className="text-slate-700 leading-relaxed font-medium">{ann.content}</p>
-                      </div>
-                    </Card>
-                  ))}
+                    </div>
                 </div>
-              </TabContent>
-              <TabContent value="requests">
-                <div className="grid gap-4">
-                  {requests.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400">No pending requests.</div>
-                  ) : requests.map(req => (
-                    <Card key={req.id} className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 uppercase">{req.menteeName?.[0]}</div>
-                          <div><h4 className="font-bold text-slate-900 text-lg">{req.menteeName}</h4><p className="text-sm text-slate-500">{req.menteeInfo}</p></div>
+                <div class="md:w-1/2 p-12 flex flex-col justify-center bg-white" id="login-form-container">
+                    <!-- Step 1: Role Selection -->
+                    <div id="role-selection" class="space-y-8">
+                        <div class="text-center">
+                            <h2 class="text-2xl font-black text-slate-800">Welcome Back</h2>
+                            <p class="text-slate-500 font-medium">Select your portal role</p>
                         </div>
-                      </div>
-                      <p className="text-sm text-slate-600 italic mb-4">"{req.message}"</p>
-                      <div className="flex gap-3">
-                        <Button className="flex-1 bg-emerald-600">Approve</Button>
-                        <Button variant="outline" className="flex-1 text-red-500">Ignore</Button>
-                      </div>
-                    </Card>
-                  ))}
+                        <div class="space-y-4">
+                            <button onclick="handleRoleSelect('mentor')" class="w-full flex items-center gap-4 p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-left group">
+                                <div class="bg-indigo-100 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white">
+                                    <i data-lucide="briefcase"></i>
+                                </div>
+                                <div>
+                                    <div class="font-black text-slate-800">Faculty Login</div>
+                                    <div class="text-xs text-slate-400 font-bold">Manage Mentees</div>
+                                </div>
+                            </button>
+                            <button onclick="handleRoleSelect('mentee')" class="w-full flex items-center gap-4 p-5 border-2 border-slate-100 rounded-2xl hover:border-emerald-600 hover:bg-emerald-50 transition-all text-left group">
+                                <div class="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white">
+                                    <i data-lucide="book-open"></i>
+                                </div>
+                                <div>
+                                    <div class="font-black text-slate-800">Student Login</div>
+                                    <div class="text-xs text-slate-400 font-bold">Academic Tracking</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Step 2: Verification -->
+                    <div id="verification-step" class="hidden text-center fade-in">
+                        <button onclick="resetRole()" class="text-indigo-600 font-bold text-sm mb-6 flex items-center gap-2 justify-center mx-auto hover:underline">← Change Role</button>
+                        <h2 id="role-title" class="text-2xl font-black text-slate-800 mb-2 capitalize">Verification</h2>
+                        <div class="flex justify-center mb-8">
+                            <div class="pe_verify_email shadow-lg rounded-xl overflow-hidden" data-client-id="13401266232106403409"></div>
+                        </div>
+                        <div class="flex items-center gap-2 justify-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Firebase Project: buildit-6c866
+                        </div>
+                    </div>
                 </div>
-              </TabContent>
-            </CustomTabs>
-          </div>
-        </main>
-      </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-lg shadow-2xl border-none p-6">
-            <h3 className="text-xl font-bold mb-4">New Broadcast</h3>
-            <textarea 
-              className="w-full min-h-[160px] p-4 bg-slate-50 border rounded-2xl outline-none mb-4 focus:ring-2 focus:ring-indigo-500" 
-              placeholder="Type your message to all mentees..." 
-              value={announcement} 
-              onChange={(e) => setAnnouncement(e.target.value)} 
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-              <Button onClick={handlePost}>Publish</Button>
             </div>
-          </Card>
         </div>
-      )}
-    </div>
-  );
-};
 
-/**
- * MENTEE DASHBOARD VIEW
- */
-const MenteeDashboard = ({ user, profileData, onLogout }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [announcements, setAnnouncements] = useState([]);
-
-  useEffect(() => {
-    if (!user) return;
-    const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
-    const unsub = onSnapshot(annCol, (snap) => {
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setAnnouncements(data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
-    }, (err) => console.error(err));
-    return () => unsub();
-  }, [user]);
-
-  const SidebarItem = ({ id, icon: Icon, label }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
-        activeTab === id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
-      }`}
-    >
-      <Icon size={20} />
-      <span className="font-medium">{label}</span>
-    </button>
-  );
-
-  const renderDashboard = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 rounded-2xl text-white shadow-xl lg:col-span-2 relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-3xl font-bold mb-2">Hello, {profileData?.name?.split(' ')[0]}!</h2>
-            <p className="text-indigo-100 mb-6 max-w-md">Your academic progress is looking great. Check your announcements for recent updates.</p>
-            <button className="bg-white text-indigo-700 px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">View Schedule</button>
-          </div>
-          <GraduationCap className="absolute -right-8 -bottom-8 w-64 h-64 text-white/10 rotate-12" />
-        </div>
-        
-        <Card className="p-6">
-          <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Bell size={18} className="text-indigo-600" /> Recent Updates</h3>
-          <div className="space-y-4">
-            {announcements.slice(0, 3).map(item => (
-              <div key={item.id} className="border-l-4 border-indigo-400 pl-3 py-1">
-                <p className="text-sm font-semibold text-slate-800 line-clamp-2">{item.content}</p>
-                <span className="text-[10px] text-slate-500 uppercase">{item.date}</span>
-              </div>
-            ))}
-            {announcements.length === 0 && <p className="text-xs text-slate-400 italic">No new announcements.</p>}
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2"><Clock size={18} className="text-slate-400" /> Tasks</h3>
-            <button className="text-sm text-indigo-600 font-bold hover:underline">View All</button>
-          </div>
-          <div className="space-y-3">
-            {[1, 2].map(i => (
-              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border">
-                <div className="flex items-center gap-3">
-                  <FileText size={18} className="text-slate-400" />
-                  <div><p className="text-sm font-bold text-slate-800">Assignment {i}</p><p className="text-xs text-slate-500">Due in {i+2} days</p></div>
+        <!-- Main Portal View (Mentor) -->
+        <div id="mentor-view" class="hidden min-h-screen bg-slate-50 flex w-full">
+            <aside class="w-64 bg-white border-r border-slate-200 hidden lg:flex flex-col shrink-0">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 text-indigo-600 font-bold text-xl">
+                        <i data-lucide="user-check" class="w-8 h-8"></i>
+                        <span>IILM Portal</span>
+                    </div>
                 </div>
-                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-600 uppercase">Pending</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card className="p-6">
-           <h3 className="font-bold text-slate-800 mb-4">Active Mentors</h3>
-           <div className="flex -space-x-3 mb-6">
-             {[1,2,3].map(i => (
-               <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 shadow-sm ring-1 ring-slate-100 uppercase">M{i}</div>
-             ))}
-           </div>
-           <p className="text-xs text-slate-500">Connect with faculty members in the Mentorship tab.</p>
-        </Card>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row w-full font-sans antialiased">
-      <nav className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 space-y-8 h-screen sticky top-0 shrink-0">
-        <div className="flex items-center gap-3 px-2">
-          <div className="bg-indigo-600 p-2 rounded-xl shadow-indigo-200 shadow-xl"><GraduationCap className="text-white" size={24} /></div>
-          <span className="font-black text-2xl tracking-tighter text-slate-800">UniPath</span>
-        </div>
-        <div className="space-y-1">
-          <SidebarItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
-          <SidebarItem id="mentorship" icon={Users} label="Mentorship" />
-          <SidebarItem id="academic" icon={BookOpen} label="Academic Hub" />
-          <SidebarItem id="messages" icon={MessageSquare} label="Messages" />
-        </div>
-        <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-4">
-          <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-            <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm uppercase">{profileData?.name?.[0]}</div>
-            <div><p className="text-xs font-black text-slate-800">{profileData?.name}</p><p className="text-[10px] font-bold text-slate-400 uppercase">Student Portal</p></div>
-          </div>
-          <button onClick={onLogout} className="flex items-center gap-3 px-4 py-3 text-red-500 font-medium hover:bg-red-50 rounded-lg transition-colors"><LogOut size={18} /> Logout</button>
-        </div>
-      </nav>
-
-      <main className="flex-1 p-6 md:p-10 w-full overflow-y-auto">
-        <div className="hidden md:flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4 text-[10px] uppercase tracking-widest text-slate-400 font-bold"><span>Home</span><ChevronRight size={14} className="text-slate-300" /><span className="text-indigo-600">{activeTab}</span></div>
-          <div className="flex items-center gap-6">
-             <div className="relative group cursor-pointer"><Bell size={22} className="text-slate-400 group-hover:text-indigo-600" /><span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 border-2 border-white rounded-full text-[9px] text-white flex items-center justify-center font-black">!</span></div>
-             <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-slate-100"><Calendar size={18} className="text-indigo-600" /><span className="text-xs font-black text-slate-700 uppercase">{new Date().toDateString()}</span></div>
-          </div>
-        </div>
-        {activeTab === 'dashboard' ? renderDashboard() : (
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 h-[500px] flex items-center justify-center flex-col text-center p-10">
-            <h3 className="text-2xl font-black text-slate-800">Module Under Update</h3>
-            <p className="text-slate-500 mt-3 font-medium">We're enhancing the {activeTab} experience for BuildIt-6c866 users.</p>
-            <button onClick={() => setActiveTab('dashboard')} className="mt-8 px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Back to Home</button>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-};
-
-/**
- * ROOT APP COMPONENT
- */
-const App = () => {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null); 
-  const [isVerified, setIsVerified] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState(null);
-
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) { console.error("Authentication integration failed:", err); }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Phone Email verification listener
-  useEffect(() => {
-    window.phoneEmailReceiver = (userObj) => { setIsVerified(true); };
-    return () => delete window.phoneEmailReceiver;
-  }, []);
-
-  // Inject Phone Email script for verification
-  useEffect(() => {
-    if (role && !isVerified) {
-      const existingScript = document.getElementById('phone-email-script');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.id = 'phone-email-script';
-        script.src = "https://www.phone.email/verify_email_v1.js";
-        script.async = true;
-        document.body.appendChild(script);
-      }
-    }
-  }, [role, isVerified]);
-
-  useEffect(() => {
-    if (!user || !role || !isVerified) return;
-    
-    const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'info');
-    const fetchProfile = async () => {
-      try {
-        const snap = await getDoc(userDocRef);
-        if (snap.exists()) {
-          setProfileData(snap.data());
-        } else {
-          const newData = {
-            uid: user.uid,
-            role: role,
-            name: role === 'mentor' ? 'Dr. Vikram Seth' : 'Aarav Gupta',
-            email: 'user@buildit.edu',
-            title: role === 'mentor' ? 'Department Head' : 'Junior Student',
-            createdAt: serverTimestamp()
-          };
-          await setDoc(userDocRef, newData);
-          setProfileData(newData);
-        }
-      } catch (e) { console.error("Profile sync error:", e); }
-    };
-    fetchProfile();
-  }, [user, role, isVerified]);
-
-  const handleLogout = () => {
-    setRole(null);
-    setIsVerified(false);
-    setProfileData(null);
-  };
-
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
-      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-600 mb-4"></div>
-      <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Initializing BuildIt Cloud</p>
-    </div>
-  );
-
-  if (user && role && isVerified) {
-    return role === 'mentor' ? (
-      <MentorDashboard user={user} profileData={profileData} onLogout={handleLogout} />
-    ) : (
-      <MenteeDashboard user={user} profileData={profileData} onLogout={handleLogout} />
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4 font-sans">
-      <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
-        <div className="md:w-1/2 bg-indigo-600 p-12 text-white flex flex-col justify-center">
-          <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6"><GraduationCap size={40} /></div>
-          <h1 className="text-4xl font-black mb-4 leading-tight">UniPath Academic</h1>
-          <p className="text-indigo-100 text-lg opacity-90">Securely connected via BuildIt-6c866 Firebase.</p>
-          <div className="mt-8 pt-8 border-t border-white/20">
-             <div className="flex items-center gap-3 text-sm font-bold"><ShieldCheck size={18} /> Verified Institution Portal</div>
-          </div>
-        </div>
-        <div className="md:w-1/2 p-12 flex flex-col justify-center bg-white">
-          {!role ? (
-            <div className="space-y-8">
-              <div className="text-center">
-                <h2 className="text-2xl font-black text-slate-800">Welcome Back</h2>
-                <p className="text-slate-500 font-medium">Select your portal role</p>
-              </div>
-              <div className="space-y-4">
-                <button onClick={() => setRole('mentor')} className="w-full flex items-center gap-4 p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-left group">
-                  <div className="bg-indigo-100 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white"><Briefcase /></div>
-                  <div><div className="font-black text-slate-800">Faculty Login</div><div className="text-xs text-slate-400 font-bold">Manage Mentees</div></div>
-                </button>
-                <button onClick={() => setRole('mentee')} className="w-full flex items-center gap-4 p-5 border-2 border-slate-100 rounded-2xl hover:border-emerald-600 hover:bg-emerald-50 transition-all text-left group">
-                  <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white"><BookOpen /></div>
-                  <div><div className="font-black text-slate-800">Student Login</div><div className="text-xs text-slate-400 font-bold">Academic Tracking</div></div>
-                </button>
-              </div>
+                <nav class="flex-1 px-4 space-y-1">
+                    <div class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-600 rounded-lg font-bold cursor-pointer">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                    </div>
+                </nav>
+                <div class="p-4 border-t">
+                    <div onclick="logout()" class="flex items-center gap-3 px-4 py-3 text-red-500 font-medium cursor-pointer hover:bg-red-50 rounded-lg transition-colors">
+                        <i data-lucide="log-out" class="w-5 h-5"></i> Logout
+                    </div>
+                </div>
+            </aside>
+            <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+                <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
+                    <h2 class="text-xl font-bold text-slate-800">Mentor Console</h2>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right hidden sm:block">
+                            <p id="mentor-name-display" class="text-sm font-bold text-slate-900"></p>
+                            <p id="mentor-title-display" class="text-xs text-slate-500 font-medium"></p>
+                        </div>
+                        <div id="mentor-avatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold border-2 border-indigo-100 uppercase"></div>
+                    </div>
+                </header>
+                <main class="flex-1 overflow-y-auto p-8">
+                    <div class="max-w-5xl mx-auto space-y-8">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Faculty Dashboard</h1>
+                                <p class="text-slate-500 mt-1 font-medium">Broadcast news and manage mentee interactions.</p>
+                            </div>
+                            <button onclick="toggleAnnouncementModal(true)" class="bg-indigo-600 text-white hover:bg-indigo-700 h-12 px-6 rounded-lg font-medium transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+                                <i data-lucide="megaphone" class="w-5 h-5"></i> Create Announcement
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><div class="flex justify-between items-start"><div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Mentees</p><h3 class="text-3xl font-black text-slate-900 mt-1">12</h3></div><div class="p-3 rounded-xl bg-indigo-600 text-white"><i data-lucide="users" class="w-6 h-6"></i></div></div></div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><div class="flex justify-between items-start"><div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Requests</p><h3 id="mentor-req-count" class="text-3xl font-black text-slate-900 mt-1">0</h3></div><div class="p-3 rounded-xl bg-amber-500 text-white"><i data-lucide="bell" class="w-6 h-6"></i></div></div></div>
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><div class="flex justify-between items-start"><div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Broadcasts</p><h3 id="mentor-ann-count" class="text-3xl font-black text-slate-900 mt-1">0</h3></div><div class="p-3 rounded-xl bg-emerald-500 text-white"><i data-lucide="megaphone" class="w-6 h-6"></i></div></div></div>
+                        </div>
+                        <div id="mentor-announcements-list" class="space-y-4"></div>
+                    </div>
+                </main>
             </div>
-          ) : (
-            <div className="text-center animate-in fade-in slide-in-from-bottom-4">
-              <button onClick={() => setRole(null)} className="text-indigo-600 font-bold text-sm mb-6 flex items-center gap-2 justify-center mx-auto hover:underline">← Change Role</button>
-              <h2 className="text-2xl font-black text-slate-800 mb-2 capitalize">{role} Verification</h2>
-              <div className="flex justify-center mb-8">
-                <div className="pe_verify_email shadow-lg rounded-xl overflow-hidden" data-client-id="13401266232106403409"></div>
-              </div>
-              <div className="flex items-center gap-2 justify-center text-[10px] text-slate-400 font-bold uppercase tracking-widest"><ShieldCheck size={14} /> Firebase Project: buildit-6c866</div>
-            </div>
-          )}
         </div>
-      </div>
-    </div>
-  );
-};
 
-export default App;
+        <!-- Main Portal View (Mentee) -->
+        <div id="mentee-view" class="hidden min-h-screen bg-slate-50 flex flex-col md:flex-row w-full font-sans antialiased">
+            <nav class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 space-y-8 h-screen sticky top-0 shrink-0">
+                <div class="flex items-center gap-3 px-2">
+                    <div class="bg-indigo-600 p-2 rounded-xl shadow-indigo-200 shadow-xl"><i data-lucide="graduation-cap" class="text-white"></i></div>
+                    <span class="font-black text-2xl tracking-tighter text-slate-800">UniPath</span>
+                </div>
+                <div class="space-y-1">
+                    <div class="w-full flex items-center space-x-3 p-3 rounded-lg bg-indigo-600 text-white shadow-md"><i data-lucide="layout-dashboard"></i> <span class="font-medium">Dashboard</span></div>
+                </div>
+                <div class="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-4">
+                    <div class="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                        <div id="mentee-avatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm uppercase"></div>
+                        <div><p id="mentee-name-display" class="text-xs font-black text-slate-800"></p><p class="text-[10px] font-bold text-slate-400 uppercase">Student Portal</p></div>
+                    </div>
+                    <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 text-red-500 font-medium hover:bg-red-50 rounded-lg transition-colors"><i data-lucide="log-out"></i> Logout</button>
+                </div>
+            </nav>
+            <main class="flex-1 p-6 md:p-10 w-full overflow-y-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 rounded-2xl text-white shadow-xl lg:col-span-2 relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h2 id="mentee-welcome-text" class="text-3xl font-bold mb-2">Hello!</h2>
+                            <p class="text-indigo-100 mb-6 max-w-md">Your academic progress is looking great. Check your announcements for recent updates.</p>
+                            <button class="bg-white text-indigo-700 px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">View Schedule</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-indigo-600"><i data-lucide="bell"></i> Updates</h3>
+                        <div id="mentee-announcements-list" class="space-y-4"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Announcement Modal -->
+        <div id="announcement-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl border border-slate-200 w-full max-w-lg shadow-2xl p-6">
+                <h3 class="text-xl font-bold mb-4">New Broadcast</h3>
+                <textarea id="announcement-text" class="w-full min-h-[160px] p-4 bg-slate-50 border rounded-2xl outline-none mb-4 focus:ring-2 focus:ring-indigo-500" placeholder="Type your message to all mentees..."></textarea>
+                <div class="flex justify-end gap-2">
+                    <button onclick="toggleAnnouncementModal(false)" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-medium transition-all">Cancel</button>
+                    <button onclick="submitAnnouncement()" class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg font-medium transition-all">Publish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOSm_MWyZ1phOXRbPFv28JJ-DGMJB2yoI",
+            authDomain: "buildit-6c866.firebaseapp.com",
+            projectId: "buildit-6c866",
+            storageBucket: "buildit-6c866.firebasestorage.app",
+            messagingSenderId: "38864758161",
+            appId: "1:38864758161:web:a3ca049c03bbe85acbe630",
+            measurementId: "G-LRZX45VTDW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = "buildit-unipath";
+
+        // --- State ---
+        let currentUser = null;
+        let selectedRole = null;
+        let profile = null;
+
+        // --- Initialization ---
+        window.onload = async () => {
+            lucide.createIcons();
+            
+            // Handle Phone Email Receiver
+            window.phoneEmailReceiver = (userObj) => {
+                onVerified();
+            };
+
+            // Auth Listener
+            onAuthStateChanged(auth, async (user) => {
+                currentUser = user;
+                if (!user) {
+                    await signInAnonymously(auth);
+                }
+                hideElement('loading-screen');
+                showElement('login-view');
+            });
+        };
+
+        // --- Logic Functions ---
+        window.handleRoleSelect = (role) => {
+            selectedRole = role;
+            document.getElementById('role-title').innerText = role + ' Verification';
+            hideElement('role-selection');
+            showElement('verification-step');
+            
+            // Inject Script if not present
+            if (!document.getElementById('phone-email-script')) {
+                const script = document.createElement('script');
+                script.id = 'phone-email-script';
+                script.src = "https://www.phone.email/verify_email_v1.js";
+                script.async = true;
+                document.body.appendChild(script);
+            }
+        };
+
+        window.resetRole = () => {
+            selectedRole = null;
+            hideElement('verification-step');
+            showElement('role-selection');
+        };
+
+        async function onVerified() {
+            if (!currentUser || !selectedRole) return;
+            
+            hideElement('login-view');
+            showElement('loading-screen');
+
+            const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'info');
+            try {
+                const snap = await getDoc(userDocRef);
+                if (snap.exists()) {
+                    profile = snap.data();
+                } else {
+                    profile = {
+                        uid: currentUser.uid,
+                        role: selectedRole,
+                        name: selectedRole === 'mentor' ? 'Dr. Vikram Seth' : 'Aarav Gupta',
+                        email: 'user@buildit.edu',
+                        title: selectedRole === 'mentor' ? 'Department Head' : 'Junior Student',
+                        createdAt: serverTimestamp()
+                    };
+                    await setDoc(userDocRef, profile);
+                }
+                renderDashboard();
+            } catch (e) {
+                console.error("Verification error", e);
+            }
+        }
+
+        function renderDashboard() {
+            hideElement('loading-screen');
+            if (profile.role === 'mentor') {
+                showElement('mentor-view');
+                setupMentorListeners();
+                updateMentorProfileUI();
+            } else {
+                showElement('mentee-view');
+                setupMenteeListeners();
+                updateMenteeProfileUI();
+            }
+        }
+
+        function updateMentorProfileUI() {
+            document.getElementById('mentor-name-display').innerText = profile.name;
+            document.getElementById('mentor-title-display').innerText = profile.title;
+            document.getElementById('mentor-avatar').innerText = profile.name[0];
+        }
+
+        function updateMenteeProfileUI() {
+            document.getElementById('mentee-name-display').innerText = profile.name;
+            document.getElementById('mentee-avatar').innerText = profile.name[0];
+            document.getElementById('mentee-welcome-text').innerText = `Hello, ${profile.name.split(' ')[0]}!`;
+        }
+
+        // --- Listeners ---
+        function setupMentorListeners() {
+            const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
+            onSnapshot(annCol, (snap) => {
+                const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const sorted = data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                document.getElementById('mentor-ann-count').innerText = sorted.length;
+                renderAnnouncements('mentor-announcements-list', sorted);
+            });
+
+            const reqCol = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
+            onSnapshot(reqCol, (snap) => {
+                const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const filtered = data.filter(r => r.mentorId === currentUser.uid);
+                document.getElementById('mentor-req-count').innerText = filtered.length;
+            });
+        }
+
+        function setupMenteeListeners() {
+            const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
+            onSnapshot(annCol, (snap) => {
+                const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const sorted = data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                renderAnnouncements('mentee-announcements-list', sorted.slice(0, 5));
+            });
+        }
+
+        function renderAnnouncements(containerId, list) {
+            const container = document.getElementById(containerId);
+            if (list.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-slate-400">No data found.</div>';
+                return;
+            }
+            container.innerHTML = list.map(ann => `
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex overflow-hidden fade-in">
+                    <div class="w-2 bg-indigo-600"></div>
+                    <div class="p-6 flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Broadcast</span>
+                            <span class="text-[10px] font-bold text-slate-400">${ann.date || 'Today'}</span>
+                        </div>
+                        <p class="text-slate-700 leading-relaxed font-medium">${ann.content}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- Actions ---
+        window.toggleAnnouncementModal = (show) => {
+            const modal = document.getElementById('announcement-modal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        };
+
+        window.submitAnnouncement = async () => {
+            const text = document.getElementById('announcement-text').value;
+            if (!text.trim()) return;
+
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'announcements'), {
+                    content: text,
+                    authorId: currentUser.uid,
+                    authorName: profile.name,
+                    createdAt: serverTimestamp(),
+                    date: new Date().toLocaleDateString()
+                });
+                document.getElementById('announcement-text').value = '';
+                toggleAnnouncementModal(false);
+            } catch (e) { console.error(e); }
+        };
+
+        window.logout = () => {
+            selectedRole = null;
+            profile = null;
+            hideElement('mentor-view');
+            hideElement('mentee-view');
+            showElement('login-view');
+            resetRole();
+        };
+
+        // --- Helpers ---
+        function showElement(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hideElement(id) { document.getElementById(id).classList.add('hidden'); }
+
+    </script>
+</body>
+</html>
