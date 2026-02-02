@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IILM Student Connect</title>
-    <!-- Tailwind CSS CDN -->
+    <title>IILM Academic Portal</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -17,159 +17,182 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .hidden { display: none !important; }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen">
 
-    <!-- App Container -->
     <div id="app">
-        <!-- Loading Spinner -->
-        <div id="loading-screen" class="flex flex-col items-center justify-center min-h-screen bg-slate-50">
-            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-600 mb-4"></div>
-            <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">Initializing BuildIt Cloud</p>
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center min-h-screen bg-white">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-indigo-600 mb-4"></div>
+            <p class="text-slate-500 font-bold text-xs uppercase tracking-widest">Securing Connection...</p>
         </div>
 
-        <!-- Role Selection / Login View -->
+        <!-- Login / Role Selection View -->
         <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-4">
             <div class="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
-                <div class="md:w-1/2 bg-indigo-600 p-12 text-white flex flex-col justify-center">
-                    <div class="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-                        <i data-lucide="graduation-cap" class="w-10 h-10"></i>
-                    </div>
-                    <h1 class="text-4xl font-black mb-4 leading-tight">UniPath Academic</h1>
-                    <p class="text-indigo-100 text-lg opacity-90">Securely connected via BuildIt-6c866 Firebase.</p>
-                    <div class="mt-8 pt-8 border-t border-white/20">
-                        <div class="flex items-center gap-3 text-sm font-bold">
-                            <i data-lucide="shield-check" class="w-5 h-5"></i> Verified Institution Portal
+                <div class="md:w-1/2 bg-indigo-600 p-12 text-white flex flex-col justify-center relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                            <i data-lucide="graduation-cap" class="w-10 h-10"></i>
+                        </div>
+                        <h1 class="text-4xl font-black mb-4 leading-tight">IILM Academic</h1>
+                        <p class="text-indigo-100 text-lg opacity-90">Your gateway to institutional mentorship and academic tracking.</p>
+                        <div class="mt-8 pt-8 border-t border-white/20">
+                            <div class="flex items-center gap-3 text-sm font-bold">
+                                <i data-lucide="shield-check" class="w-5 h-5"></i> Verified Portal
+                            </div>
                         </div>
                     </div>
+                    <!-- Decorative Circle -->
+                    <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-500 rounded-full opacity-50 blur-3xl"></div>
                 </div>
-                <div class="md:w-1/2 p-12 flex flex-col justify-center bg-white" id="login-form-container">
+
+                <div class="md:w-1/2 p-12 flex flex-col justify-center bg-white">
                     <!-- Step 1: Role Selection -->
                     <div id="role-selection" class="space-y-8">
                         <div class="text-center">
-                            <h2 class="text-2xl font-black text-slate-800">Welcome Back</h2>
-                            <p class="text-slate-500 font-medium">Select your portal role</p>
+                            <h2 class="text-2xl font-black text-slate-800">Welcome</h2>
+                            <p class="text-slate-500 font-medium">Please select your portal role</p>
                         </div>
                         <div class="space-y-4">
                             <button onclick="handleRoleSelect('mentor')" class="w-full flex items-center gap-4 p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-left group">
-                                <div class="bg-indigo-100 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white">
+                                <div class="bg-indigo-100 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                                     <i data-lucide="briefcase"></i>
                                 </div>
                                 <div>
                                     <div class="font-black text-slate-800">Faculty Login</div>
-                                    <div class="text-xs text-slate-400 font-bold">Manage Mentees</div>
+                                    <div class="text-xs text-slate-400 font-bold">Manage your mentees</div>
                                 </div>
                             </button>
                             <button onclick="handleRoleSelect('mentee')" class="w-full flex items-center gap-4 p-5 border-2 border-slate-100 rounded-2xl hover:border-emerald-600 hover:bg-emerald-50 transition-all text-left group">
-                                <div class="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white">
+                                <div class="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                                     <i data-lucide="book-open"></i>
                                 </div>
                                 <div>
                                     <div class="font-black text-slate-800">Student Login</div>
-                                    <div class="text-xs text-slate-400 font-bold">Academic Tracking</div>
+                                    <div class="text-xs text-slate-400 font-bold">View academic updates</div>
                                 </div>
                             </button>
                         </div>
                     </div>
+
                     <!-- Step 2: Verification -->
                     <div id="verification-step" class="hidden text-center fade-in">
-                        <button onclick="resetRole()" class="text-indigo-600 font-bold text-sm mb-6 flex items-center gap-2 justify-center mx-auto hover:underline">← Change Role</button>
+                        <button onclick="resetRole()" class="text-indigo-600 font-bold text-sm mb-6 flex items-center gap-2 justify-center mx-auto hover:underline">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to roles
+                        </button>
                         <h2 id="role-title" class="text-2xl font-black text-slate-800 mb-2 capitalize">Verification</h2>
-                        <div class="flex justify-center mb-8">
-                            <div class="pe_verify_email shadow-lg rounded-xl overflow-hidden" data-client-id="13401266232106403409"></div>
-                        </div>
-                        <div class="flex items-center gap-2 justify-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Firebase Project: buildit-6c866
+                        <p class="text-slate-500 mb-8 text-sm">Secure verification via institutional protocol</p>
+                        
+                        <!-- Mock Verification Button for Demo Purposes -->
+                        <button onclick="onVerified()" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-slate-800 transition-all">
+                            Verify Identity
+                        </button>
+                        
+                        <div class="mt-8 flex items-center gap-2 justify-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Encrypted Session
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Portal View (Mentor) -->
-        <div id="mentor-view" class="hidden min-h-screen bg-slate-50 flex w-full">
+        <!-- Mentor View -->
+        <div id="mentor-view" class="hidden min-h-screen flex w-full">
             <aside class="w-64 bg-white border-r border-slate-200 hidden lg:flex flex-col shrink-0">
-                <div class="p-6">
+                <div class="p-8">
                     <div class="flex items-center gap-3 text-indigo-600 font-bold text-xl">
-                        <i data-lucide="user-check" class="w-8 h-8"></i>
+                        <i data-lucide="shield-check" class="w-8 h-8"></i>
                         <span>IILM Portal</span>
                     </div>
                 </div>
-                <nav class="flex-1 px-4 space-y-1">
-                    <div class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-600 rounded-lg font-bold cursor-pointer">
+                <nav class="flex-1 px-4 space-y-2">
+                    <div class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold">
                         <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                     </div>
                 </nav>
-                <div class="p-4 border-t">
-                    <div onclick="logout()" class="flex items-center gap-3 px-4 py-3 text-red-500 font-medium cursor-pointer hover:bg-red-50 rounded-lg transition-colors">
+                <div class="p-6 border-t">
+                    <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors">
                         <i data-lucide="log-out" class="w-5 h-5"></i> Logout
-                    </div>
+                    </button>
                 </div>
             </aside>
-            <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-                    <h2 class="text-xl font-bold text-slate-800">Mentor Console</h2>
+            <div class="flex-1 flex flex-col min-w-0">
+                <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+                    <h2 class="text-lg font-bold text-slate-800">Faculty Console</h2>
                     <div class="flex items-center gap-4">
                         <div class="text-right hidden sm:block">
-                            <p id="mentor-name-display" class="text-sm font-bold text-slate-900"></p>
+                            <p id="mentor-name-display" class="text-sm font-black text-slate-900"></p>
                             <p id="mentor-title-display" class="text-xs text-slate-500 font-medium"></p>
                         </div>
-                        <div id="mentor-avatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold border-2 border-indigo-100 uppercase"></div>
+                        <div id="mentor-avatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold"></div>
                     </div>
                 </header>
                 <main class="flex-1 overflow-y-auto p-8">
                     <div class="max-w-5xl mx-auto space-y-8">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Faculty Dashboard</h1>
-                                <p class="text-slate-500 mt-1 font-medium">Broadcast news and manage mentee interactions.</p>
+                                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Announcements</h1>
+                                <p class="text-slate-500 font-medium">Broadcast news to all your mentees.</p>
                             </div>
-                            <button onclick="toggleAnnouncementModal(true)" class="bg-indigo-600 text-white hover:bg-indigo-700 h-12 px-6 rounded-lg font-medium transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
-                                <i data-lucide="megaphone" class="w-5 h-5"></i> Create Announcement
+                            <button onclick="toggleAnnouncementModal(true)" class="bg-indigo-600 text-white hover:bg-indigo-700 h-12 px-6 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-100">
+                                <i data-lucide="plus" class="w-5 h-5"></i> Create Broadcast
                             </button>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><div class="flex justify-between items-start"><div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Mentees</p><h3 class="text-3xl font-black text-slate-900 mt-1">12</h3></div><div class="p-3 rounded-xl bg-indigo-600 text-white"><i data-lucide="users" class="w-6 h-6"></i></div></div></div>
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><div class="flex justify-between items-start"><div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Requests</p><h3 id="mentor-req-count" class="text-3xl font-black text-slate-900 mt-1">0</h3></div><div class="p-3 rounded-xl bg-amber-500 text-white"><i data-lucide="bell" class="w-6 h-6"></i></div></div></div>
-                            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><div class="flex justify-between items-start"><div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Broadcasts</p><h3 id="mentor-ann-count" class="text-3xl font-black text-slate-900 mt-1">0</h3></div><div class="p-3 rounded-xl bg-emerald-500 text-white"><i data-lucide="megaphone" class="w-6 h-6"></i></div></div></div>
+                        
+                        <div id="mentor-announcements-list" class="space-y-4">
+                            <!-- Announcements populate here -->
                         </div>
-                        <div id="mentor-announcements-list" class="space-y-4"></div>
                     </div>
                 </main>
             </div>
         </div>
 
-        <!-- Main Portal View (Mentee) -->
-        <div id="mentee-view" class="hidden min-h-screen bg-slate-50 flex flex-col md:flex-row w-full font-sans antialiased">
-            <nav class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 space-y-8 h-screen sticky top-0 shrink-0">
-                <div class="flex items-center gap-3 px-2">
-                    <div class="bg-indigo-600 p-2 rounded-xl shadow-indigo-200 shadow-xl"><i data-lucide="graduation-cap" class="text-white"></i></div>
-                    <span class="font-black text-2xl tracking-tighter text-slate-800">UniPath</span>
+        <!-- Mentee View -->
+        <div id="mentee-view" class="hidden min-h-screen flex flex-col w-full bg-slate-50">
+            <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+                <div class="flex items-center gap-3 text-indigo-600 font-bold text-xl">
+                    <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+                    <span>IILM</span>
                 </div>
-                <div class="space-y-1">
-                    <div class="w-full flex items-center space-x-3 p-3 rounded-lg bg-indigo-600 text-white shadow-md"><i data-lucide="layout-dashboard"></i> <span class="font-medium">Dashboard</span></div>
+                <div class="flex items-center gap-4">
+                    <div id="mentee-avatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold"></div>
+                    <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500"><i data-lucide="log-out"></i></button>
                 </div>
-                <div class="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-4">
-                    <div class="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                        <div id="mentee-avatar" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm uppercase"></div>
-                        <div><p id="mentee-name-display" class="text-xs font-black text-slate-800"></p><p class="text-[10px] font-bold text-slate-400 uppercase">Student Portal</p></div>
-                    </div>
-                    <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 text-red-500 font-medium hover:bg-red-50 rounded-lg transition-colors"><i data-lucide="log-out"></i> Logout</button>
-                </div>
-            </nav>
-            <main class="flex-1 p-6 md:p-10 w-full overflow-y-auto">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 rounded-2xl text-white shadow-xl lg:col-span-2 relative overflow-hidden">
-                        <div class="relative z-10">
-                            <h2 id="mentee-welcome-text" class="text-3xl font-bold mb-2">Hello!</h2>
-                            <p class="text-indigo-100 mb-6 max-w-md">Your academic progress is looking great. Check your announcements for recent updates.</p>
-                            <button class="bg-white text-indigo-700 px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">View Schedule</button>
+            </header>
+            <main class="flex-1 p-6 md:p-10">
+                <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-indigo-600 p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+                            <h2 id="mentee-welcome-text" class="text-3xl font-black mb-2">Welcome Back!</h2>
+                            <p class="text-indigo-100 opacity-80">Stay updated with the latest faculty announcements.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                            <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
+                                <i data-lucide="megaphone" class="text-indigo-600"></i> Recent Broadcasts
+                            </h3>
+                            <div id="mentee-announcements-list" class="space-y-4"></div>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-indigo-600"><i data-lucide="bell"></i> Updates</h3>
-                        <div id="mentee-announcements-list" class="space-y-4"></div>
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="font-bold text-slate-800 mb-4">Profile Info</h3>
+                            <div class="space-y-3">
+                                <div class="p-3 bg-slate-50 rounded-xl">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</p>
+                                    <p id="mentee-name-display-info" class="font-bold text-slate-700"></p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</p>
+                                    <p class="font-bold text-slate-700">Student</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -177,96 +200,100 @@
 
         <!-- Announcement Modal -->
         <div id="announcement-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl border border-slate-200 w-full max-w-lg shadow-2xl p-6">
-                <h3 class="text-xl font-bold mb-4">New Broadcast</h3>
-                <textarea id="announcement-text" class="w-full min-h-[160px] p-4 bg-slate-50 border rounded-2xl outline-none mb-4 focus:ring-2 focus:ring-indigo-500" placeholder="Type your message to all mentees..."></textarea>
-                <div class="flex justify-end gap-2">
-                    <button onclick="toggleAnnouncementModal(false)" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-medium transition-all">Cancel</button>
-                    <button onclick="submitAnnouncement()" class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg font-medium transition-all">Publish</button>
+            <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl p-8 transform transition-all">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black text-slate-800">New Broadcast</h3>
+                    <button onclick="toggleAnnouncementModal(false)" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+                </div>
+                <textarea id="announcement-text" class="w-full min-h-[160px] p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none mb-6 focus:border-indigo-600 transition-colors" placeholder="What would you like to share with your mentees?"></textarea>
+                <div class="flex gap-3">
+                    <button onclick="toggleAnnouncementModal(false)" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-all">Cancel</button>
+                    <button onclick="submitAnnouncement()" class="flex-1 py-4 bg-indigo-600 text-white font-bold hover:bg-indigo-700 rounded-2xl transition-all shadow-lg shadow-indigo-100">Post Announcement</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK Scripts -->
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Config ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBOSm_MWyZ1phOXRbPFv28JJ-DGMJB2yoI",
-            authDomain: "buildit-6c866.firebaseapp.com",
-            projectId: "buildit-6c866",
-            storageBucket: "buildit-6c866.firebasestorage.app",
-            messagingSenderId: "38864758161",
-            appId: "1:38864758161:web:a3ca049c03bbe85acbe630",
-            measurementId: "G-LRZX45VTDW"
-        };
+        // Use environment provided config or fallback
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyBOSm_MWyZ1phOXRbPFv28JJ-DGMJB2yoI",
+                authDomain: "buildit-6c866.firebaseapp.com",
+                projectId: "buildit-6c866",
+                storageBucket: "buildit-6c866.firebasestorage.app",
+                messagingSenderId: "38864758161",
+                appId: "1:38864758161:web:a3ca049c03bbe85acbe630"
+            };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "buildit-unipath";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "iilm-portal-v1";
 
-        // --- State ---
         let currentUser = null;
         let selectedRole = null;
         let profile = null;
 
-        // --- Initialization ---
-        window.onload = async () => {
-            lucide.createIcons();
-            
-            // Handle Phone Email Receiver
-            window.phoneEmailReceiver = (userObj) => {
-                onVerified();
-            };
+        // Initialize Icons
+        lucide.createIcons();
 
-            // Auth Listener
-            onAuthStateChanged(auth, async (user) => {
-                currentUser = user;
-                if (!user) {
+        // Auth Handler
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
                     await signInAnonymously(auth);
                 }
-                hideElement('loading-screen');
-                showElement('login-view');
-            });
+            } catch (error) {
+                console.error("Auth Error:", error);
+                await signInAnonymously(auth);
+            }
         };
 
-        // --- Logic Functions ---
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                hideElement('loading-screen');
+                showElement('login-view');
+            }
+        });
+
+        initAuth();
+
+        // UI Handlers
         window.handleRoleSelect = (role) => {
             selectedRole = role;
             document.getElementById('role-title').innerText = role + ' Verification';
             hideElement('role-selection');
             showElement('verification-step');
-            
-            // Inject Script if not present
-            if (!document.getElementById('phone-email-script')) {
-                const script = document.createElement('script');
-                script.id = 'phone-email-script';
-                script.src = "https://www.phone.email/verify_email_v1.js";
-                script.async = true;
-                document.body.appendChild(script);
-            }
+            lucide.createIcons();
         };
 
         window.resetRole = () => {
             selectedRole = null;
             hideElement('verification-step');
             showElement('role-selection');
+            lucide.createIcons();
         };
 
-        async function onVerified() {
+        window.onVerified = async () => {
             if (!currentUser || !selectedRole) return;
             
-            hideElement('login-view');
             showElement('loading-screen');
+            hideElement('login-view');
 
-            const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'info');
+            const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'info');
+            
             try {
-                const snap = await getDoc(userDocRef);
+                const snap = await getDoc(profileRef);
                 if (snap.exists()) {
                     profile = snap.data();
                 } else {
@@ -274,83 +301,73 @@
                         uid: currentUser.uid,
                         role: selectedRole,
                         name: selectedRole === 'mentor' ? 'Dr. Vikram Seth' : 'Aarav Gupta',
-                        email: 'user@buildit.edu',
-                        title: selectedRole === 'mentor' ? 'Department Head' : 'Junior Student',
+                        title: selectedRole === 'mentor' ? 'Senior Faculty' : 'Level 2 Student',
                         createdAt: serverTimestamp()
                     };
-                    await setDoc(userDocRef, profile);
+                    await setDoc(profileRef, profile);
                 }
                 renderDashboard();
-            } catch (e) {
-                console.error("Verification error", e);
+            } catch (err) {
+                console.error("Profile Error:", err);
             }
-        }
+        };
 
         function renderDashboard() {
             hideElement('loading-screen');
             if (profile.role === 'mentor') {
                 showElement('mentor-view');
-                setupMentorListeners();
-                updateMentorProfileUI();
+                updateMentorUI();
+                setupListeners();
             } else {
                 showElement('mentee-view');
-                setupMenteeListeners();
-                updateMenteeProfileUI();
+                updateMenteeUI();
+                setupListeners();
             }
+            lucide.createIcons();
         }
 
-        function updateMentorProfileUI() {
+        function updateMentorUI() {
             document.getElementById('mentor-name-display').innerText = profile.name;
             document.getElementById('mentor-title-display').innerText = profile.title;
             document.getElementById('mentor-avatar').innerText = profile.name[0];
         }
 
-        function updateMenteeProfileUI() {
-            document.getElementById('mentee-name-display').innerText = profile.name;
+        function updateMenteeUI() {
+            const nameDisp = document.getElementById('mentee-name-display-info');
+            if (nameDisp) nameDisp.innerText = profile.name;
             document.getElementById('mentee-avatar').innerText = profile.name[0];
             document.getElementById('mentee-welcome-text').innerText = `Hello, ${profile.name.split(' ')[0]}!`;
         }
 
-        // --- Listeners ---
-        function setupMentorListeners() {
-            const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
-            onSnapshot(annCol, (snap) => {
-                const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const sorted = data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                document.getElementById('mentor-ann-count').innerText = sorted.length;
-                renderAnnouncements('mentor-announcements-list', sorted);
-            });
+        // Real-time Data Listeners
+        function setupListeners() {
+            if (!currentUser) return;
 
-            const reqCol = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
-            onSnapshot(reqCol, (snap) => {
-                const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const filtered = data.filter(r => r.mentorId === currentUser.uid);
-                document.getElementById('mentor-req-count').innerText = filtered.length;
-            });
+            const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
+            
+            onSnapshot(annCol, (snap) => {
+                const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                                 .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                
+                const containerId = profile.role === 'mentor' ? 'mentor-announcements-list' : 'mentee-announcements-list';
+                renderAnnouncements(containerId, docs);
+            }, (err) => console.error("Snapshot Error:", err));
         }
 
-        function setupMenteeListeners() {
-            const annCol = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
-            onSnapshot(annCol, (snap) => {
-                const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const sorted = data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                renderAnnouncements('mentee-announcements-list', sorted.slice(0, 5));
-            });
-        }
-
-        function renderAnnouncements(containerId, list) {
-            const container = document.getElementById(containerId);
+        function renderAnnouncements(id, list) {
+            const container = document.getElementById(id);
+            if (!container) return;
             if (list.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 text-slate-400">No data found.</div>';
+                container.innerHTML = `<div class="text-center py-12 text-slate-400 italic">No announcements yet.</div>`;
                 return;
             }
             container.innerHTML = list.map(ann => `
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex overflow-hidden fade-in">
-                    <div class="w-2 bg-indigo-600"></div>
-                    <div class="p-6 flex-1">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Broadcast</span>
-                            <span class="text-[10px] font-bold text-slate-400">${ann.date || 'Today'}</span>
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex gap-4 fade-in">
+                    <div class="w-1 bg-indigo-600 rounded-full"></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">${ann.authorName || 'Faculty'}</span>
+                            <span class="text-[10px] font-bold text-slate-400">${ann.date || 'Recently'}</span>
                         </div>
                         <p class="text-slate-700 leading-relaxed font-medium">${ann.content}</p>
                     </div>
@@ -358,11 +375,10 @@
             `).join('');
         }
 
-        // --- Actions ---
+        // Actions
         window.toggleAnnouncementModal = (show) => {
             const modal = document.getElementById('announcement-modal');
-            if (show) modal.classList.remove('hidden');
-            else modal.classList.add('hidden');
+            modal.classList.toggle('hidden', !show);
         };
 
         window.submitAnnouncement = async () => {
@@ -379,22 +395,17 @@
                 });
                 document.getElementById('announcement-text').value = '';
                 toggleAnnouncementModal(false);
-            } catch (e) { console.error(e); }
+            } catch (err) {
+                console.error("Post Error:", err);
+            }
         };
 
         window.logout = () => {
-            selectedRole = null;
-            profile = null;
-            hideElement('mentor-view');
-            hideElement('mentee-view');
-            showElement('login-view');
-            resetRole();
+            location.reload(); 
         };
 
-        // --- Helpers ---
-        function showElement(id) { document.getElementById(id).classList.remove('hidden'); }
-        function hideElement(id) { document.getElementById(id).classList.add('hidden'); }
-
+        function showElement(id) { document.getElementById(id)?.classList.remove('hidden'); }
+        function hideElement(id) { document.getElementById(id)?.classList.add('hidden'); }
     </script>
 </body>
 </html>
