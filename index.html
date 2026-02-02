@@ -219,8 +219,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
-        // Use environment provided config or fallback
+        // Firebase Configuration
         const firebaseConfig = typeof __firebase_config !== 'undefined' 
             ? JSON.parse(__firebase_config) 
             : {
@@ -229,10 +230,13 @@
                 projectId: "buildit-6c866",
                 storageBucket: "buildit-6c866.firebasestorage.app",
                 messagingSenderId: "38864758161",
-                appId: "1:38864758161:web:a3ca049c03bbe85acbe630"
+                appId: "1:38864758161:web:a3ca049c03bbe85acbe630",
+                measurementId: "G-LRZX45VTDW"
             };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : "iilm-portal-v1";
@@ -253,7 +257,7 @@
                     await signInAnonymously(auth);
                 }
             } catch (error) {
-                console.error("Auth Error:", error);
+                console.error("Auth Error, falling back to anonymous login:", error);
                 await signInAnonymously(auth);
             }
         };
