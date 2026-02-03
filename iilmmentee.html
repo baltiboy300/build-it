@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentee Portal | IILM University</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <div id="app" class="h-screen flex flex-col overflow-hidden">
+        
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
+            <div class="flex items-center gap-3 text-emerald-700 font-bold text-lg tracking-tight">
+                <div class="bg-emerald-600 text-white p-1 rounded-lg"><i data-lucide="graduation-cap" class="w-5 h-5"></i></div>
+                <span>IILM Student Hub</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-xs">AG</div>
+        </header>
+
+        <div class="flex-1 flex overflow-hidden">
+            <aside class="w-64 bg-white border-r border-slate-200 p-6 flex flex-col gap-2">
+                <button onclick="switchView('dashboard')" class="nav-btn active flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm bg-emerald-50 text-emerald-700 w-full text-left">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Home
+                </button>
+                <button onclick="switchView('discover')" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-slate-500 hover:bg-slate-50 w-full text-left">
+                    <i data-lucide="search" class="w-4 h-4"></i> Find Mentor
+                </button>
+            </aside>
+
+            <main class="flex-1 overflow-y-auto p-8 fade-in">
+                <div id="v-dashboard" class="space-y-8">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome, Aarav!</h1>
+                        <p class="text-slate-500 font-medium">Real-time updates from your mentors.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Broadcast Feed - REAL TIME -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+                            <div class="p-6 border-b border-slate-100 flex items-center gap-2">
+                                <i data-lucide="radio" class="w-4 h-4 text-emerald-600"></i>
+                                <h3 class="font-bold text-slate-800 text-sm">Campus Broadcasts</h3>
+                            </div>
+                            <div id="broadcast-feed" class="flex-1 divide-y divide-slate-100 overflow-y-auto">
+                                <div class="p-10 text-center text-slate-400 text-xs font-bold uppercase">Connecting to Feed...</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 h-fit">
+                            <h3 class="font-bold text-slate-800 text-sm mb-4">Your Primary Mentor</h3>
+                            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <div class="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white text-lg">VS</div>
+                                <div><p class="font-bold">Dr. Vikram Seth</p><p class="text-[10px] font-bold text-slate-400 uppercase">CS Dept • HOD</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="v-discover" class="hidden space-y-6">
+                    <h2 class="text-2xl font-bold">Faculty Directory</h2>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm w-fit">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600 mb-4 flex items-center justify-center font-bold text-white">VS</div>
+                        <h4 class="font-bold">Dr. Vikram Seth</h4>
+                        <p class="text-xs text-slate-500 mb-4">Computer Science Head</p>
+                        <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Request Session</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment provided variables
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'buildit-unipath';
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentUser = null;
+
+        window.onload = async () => {
+            lucide.createIcons();
+            
+            // Authentication setup following environment rules
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                }
+            };
+
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                if (user) {
+                    setupFeedListener();
+                }
+            });
+
+            await initAuth();
+        };
+
+        function setupFeedListener() {
+            if (!currentUser) return;
+
+            const col = collection(db, 'artifacts', appId, 'public', 'data', 'announcements');
+            onSnapshot(col, (snap) => {
+                const data = snap.docs.map(d => d.data()).sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                const feed = document.getElementById('broadcast-feed');
+                
+                if (data.length === 0) {
+                    feed.innerHTML = '<div class="p-10 text-center text-slate-400 text-xs font-bold uppercase">No broadcasts yet.</div>';
+                    return;
+                }
+                
+                feed.innerHTML = data.map(ann => `
+                    <div class="p-6 hover:bg-slate-50/50 transition-colors group">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase">Official</span>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">${ann.date || 'Today'}</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-800 leading-relaxed">${ann.content}</p>
+                        <p class="mt-2 text-[10px] text-slate-400 font-bold uppercase">— ${ann.authorName || 'Faculty'}</p>
+                    </div>
+                `).join('');
+            }, (error) => {
+                console.error("Firestore listener error:", error);
+            });
+        }
+
+        window.switchView = (v) => {
+            ['v-dashboard', 'v-discover'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('v-' + v).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-emerald-50', 'text-emerald-700');
+                btn.classList.add('text-slate-500');
+            });
+            const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.onclick.toString().includes(v));
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-emerald-50', 'text-emerald-700');
+                activeBtn.classList.remove('text-slate-500');
+            }
+        };
+    </script>
+</body>
+</html>

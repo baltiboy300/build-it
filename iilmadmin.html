@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IILM Admin | University Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <div id="app" class="h-screen flex flex-col overflow-hidden">
+        <!-- Sidebar -->
+        <div class="flex h-full overflow-hidden">
+            <aside class="w-72 bg-slate-900 text-slate-300 flex flex-col shrink-0 z-20">
+                <div class="p-6 border-b border-slate-800">
+                    <div class="flex items-center gap-3 text-white font-bold text-xl tracking-tight">
+                        <div class="bg-indigo-600 p-1.5 rounded-lg"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                        <span>IILM Admin</span>
+                    </div>
+                </div>
+                <nav class="flex-1 px-4 py-6 space-y-1">
+                    <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 mb-2">
+                        <i data-lucide="layout-grid" class="w-5 h-5"></i> Overview
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold hover:bg-slate-800 transition-all mb-1">
+                        <i data-lucide="users" class="w-5 h-5"></i> Faculty Management
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold hover:bg-slate-800 transition-all mb-1">
+                        <i data-lucide="graduation-cap" class="w-5 h-5"></i> Student Directory
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold hover:bg-slate-800 transition-all">
+                        <i data-lucide="settings" class="w-5 h-5"></i> System Settings
+                    </button>
+                </nav>
+                <div class="p-4 border-t border-slate-800">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white">AD</div>
+                        <div>
+                            <p class="text-xs font-bold text-white">System Admin</p>
+                            <p class="text-[10px] text-slate-500 uppercase">Super User</p>
+                        </div>
+                    </div>
+                    <button onclick="window.location.reload()" class="w-full py-2 text-red-400 text-xs font-bold hover:bg-red-400/10 rounded-lg transition-colors">Sign Out</button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-8 fade-in">
+                <header class="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">System Overview</h1>
+                        <p class="text-slate-500 font-medium">Monitoring university-wide mentorship metrics.</p>
+                    </div>
+                    <button class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
+                        <i data-lucide="download-cloud" class="w-4 h-4"></i> Generate Report
+                    </button>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Students</p>
+                        <h3 class="text-3xl font-black text-slate-900 mt-2">1,284</h3>
+                        <p class="text-xs text-emerald-600 font-bold mt-2">+12% this month</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Active Mentors</p>
+                        <h3 class="text-3xl font-black text-slate-900 mt-2">84</h3>
+                        <p class="text-xs text-slate-400 font-bold mt-2">Across 5 departments</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Ongoing Sessions</p>
+                        <h3 class="text-3xl font-black text-slate-900 mt-2">312</h3>
+                        <p class="text-xs text-indigo-600 font-bold mt-2">Active now</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">System Health</p>
+                        <h3 class="text-3xl font-black text-emerald-500 mt-2">99.9%</h3>
+                        <p class="text-xs text-slate-400 font-bold mt-2">Uptime verified</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="font-bold text-slate-800">Recent Faculty Activity</h3>
+                        <button class="text-indigo-600 text-xs font-bold hover:underline">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50/50">
+                                <tr class="text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                    <th class="py-4 px-6">Faculty Name</th>
+                                    <th class="py-4 px-6">Department</th>
+                                    <th class="py-4 px-6">Mentees</th>
+                                    <th class="py-4 px-6">Last Active</th>
+                                    <th class="py-4 px-6 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr>
+                                    <td class="py-4 px-6 font-bold text-slate-700">Dr. Vikram Seth</td>
+                                    <td class="py-4 px-6 text-sm text-slate-500">Computer Science</td>
+                                    <td class="py-4 px-6 text-sm text-slate-500">24 Students</td>
+                                    <td class="py-4 px-6 text-sm text-slate-500">10 mins ago</td>
+                                    <td class="py-4 px-6 text-right"><span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold">ONLINE</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-4 px-6 font-bold text-slate-700">Prof. Ananya Rao</td>
+                                    <td class="py-4 px-6 text-sm text-slate-500">Business Management</td>
+                                    <td class="py-4 px-6 text-sm text-slate-500">18 Students</td>
+                                    <td class="py-4 px-6 text-sm text-slate-500">2 hours ago</td>
+                                    <td class="py-4 px-6 text-right"><span class="px-2 py-1 bg-slate-100 text-slate-400 rounded-full text-[10px] font-bold">OFFLINE</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Implementation -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOSm_MWyZ1phOXRbPFv28JJ-DGMJB2yoI",
+            authDomain: "buildit-6c866.firebaseapp.com",
+            projectId: "buildit-6c866",
+            storageBucket: "buildit-6c866.firebasestorage.app",
+            messagingSenderId: "38864758161",
+            appId: "1:38864758161:web:a3ca049c03bbe85acbe630",
+            measurementId: "G-LRZX45VTDW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        lucide.createIcons();
+        console.log("Admin Portal Initialized with Firebase");
+    </script>
+</body>
+</html>
