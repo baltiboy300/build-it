@@ -14,11 +14,16 @@
         .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .tab-active { color: #059669; border-bottom: 2px solid #059669; }
+        .tab-inactive { color: #94a3b8; border-bottom: 2px solid transparent; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
     <div id="app" class="h-screen flex flex-col overflow-hidden">
         
+        <!-- Toast / Notification -->
+        <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-slate-900 text-white rounded-full text-sm font-bold shadow-2xl transition-all opacity-0 translate-y-[-20px] pointer-events-none"></div>
+
         <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10 shadow-sm">
             <div class="flex items-center gap-3 text-emerald-700 font-bold text-lg tracking-tight">
@@ -29,9 +34,9 @@
             </div>
             <div class="flex items-center gap-4">
                 <span id="sync-status" class="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Sync
                 </span>
-                <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-xs border-2 border-white shadow-sm">AG</div>
+                <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-xs border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform">AG</div>
             </div>
         </header>
 
@@ -45,8 +50,8 @@
                     <i data-lucide="search" class="w-4 h-4"></i> Find Mentor
                 </button>
                 <div class="mt-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Support</p>
-                    <button class="text-xs font-bold text-emerald-600 hover:underline">Contact Helpdesk</button>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Support</p>
+                    <button onclick="showToast('Helpdesk ticket system loading...')" class="text-xs font-bold text-emerald-600 hover:underline">Contact Helpdesk</button>
                 </div>
             </aside>
 
@@ -55,12 +60,134 @@
                 <!-- Dashboard View -->
                 <div id="v-dashboard" class="fade-in space-y-8 max-w-6xl mx-auto">
                     <header>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Welcome, Aarav!</h1>
-                        <p class="text-slate-500 font-medium">Tracking real-time updates from the Faculty Portal.</p>
+                        <h1 class="text-4xl font-black text-slate-900 tracking-tight">Welcome, Aarav!</h1>
+                        <p class="text-slate-500 font-medium">Tracking real-time updates and mentorship progress.</p>
                     </header>
 
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Active</p>
+                                <h3 class="text-3xl font-black text-slate-900 mt-1">2</h3>
+                                <p class="text-xs text-slate-500 mt-1">Ongoing relationships</p>
+                            </div>
+                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                <i data-lucide="user" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Pending</p>
+                                <h3 class="text-3xl font-black text-slate-900 mt-1">1</h3>
+                                <p class="text-xs text-slate-500 mt-1">Awaiting response</p>
+                            </div>
+                            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                                <i data-lucide="plus" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Status</p>
+                                <h3 class="text-3xl font-black text-slate-900 mt-1">100%</h3>
+                                <p class="text-xs text-slate-500 mt-1">Profile completion</p>
+                            </div>
+                            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                                <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mentorship Management Section -->
+                    <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-8">
+                        <div class="flex items-center gap-8 border-b border-slate-100 mb-8 overflow-x-auto whitespace-nowrap">
+                            <button onclick="switchSubTab('active')" id="tab-active" class="pb-4 text-sm font-bold tab-active">Active Mentorships</button>
+                            <button onclick="switchSubTab('pending')" id="tab-pending" class="pb-4 text-sm font-bold tab-inactive">Pending Requests</button>
+                            <button onclick="switchSubTab('profile')" id="tab-profile" class="pb-4 text-sm font-bold tab-inactive">My Profile</button>
+                        </div>
+
+                        <!-- Sub-Tab Content: Active -->
+                        <div id="sub-v-active" class="space-y-6">
+                            <!-- Card 1 -->
+                            <div class="p-6 rounded-3xl border border-slate-100 bg-white hover:border-indigo-100 hover:shadow-xl hover:shadow-slate-100 transition-all group">
+                                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="font-black text-slate-800">Mentorship #M1024</h4>
+                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase">Active</span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 font-medium mt-1">Started on 15/11/2023</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-black text-indigo-600">8</p>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Sessions Done</p>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-2xl mb-6">
+                                    <p class="text-sm text-slate-600 italic font-medium">"Focusing on system design patterns and React performance optimization."</p>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex gap-2">
+                                        <button onclick="showToast('Opening Chat...')" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                                            <i data-lucide="message-square" class="w-4 h-4"></i> Messages
+                                        </button>
+                                        <button onclick="showToast('Scheduling Interface...')" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i> Schedule Session
+                                        </button>
+                                    </div>
+                                    <button onclick="showToast('Viewing detailed log #M1024')" class="text-xs font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors">Details <i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                            <!-- Card 2 -->
+                            <div class="p-6 rounded-3xl border border-slate-100 bg-white hover:border-indigo-100 hover:shadow-xl hover:shadow-slate-100 transition-all group">
+                                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="font-black text-slate-800">Mentorship #M1056</h4>
+                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase">Active</span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 font-medium mt-1">Started on 10/1/2024</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-black text-indigo-600">3</p>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Sessions Done</p>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-2xl mb-6">
+                                    <p class="text-sm text-slate-600 italic font-medium">"Career coaching and interview preparation for summer internships."</p>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex gap-2">
+                                        <button onclick="showToast('Opening Chat...')" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                                            <i data-lucide="message-square" class="w-4 h-4"></i> Messages
+                                        </button>
+                                        <button onclick="showToast('Scheduling Interface...')" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i> Schedule Session
+                                        </button>
+                                    </div>
+                                    <button onclick="showToast('Viewing detailed log #M1056')" class="text-xs font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors">Details <i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Tab Content: Pending -->
+                        <div id="sub-v-pending" class="hidden space-y-4 py-10 text-center">
+                            <i data-lucide="clock" class="w-12 h-12 text-slate-200 mx-auto mb-3"></i>
+                            <h4 class="font-bold text-slate-800">1 Request Pending</h4>
+                            <p class="text-xs text-slate-400">Dr. Ananya Rao is reviewing your request sent on Feb 2nd.</p>
+                        </div>
+
+                        <!-- Sub-Tab Content: Profile -->
+                        <div id="sub-v-profile" class="hidden py-10 text-center">
+                            <div class="w-20 h-20 rounded-full bg-slate-100 mx-auto mb-4 flex items-center justify-center font-bold text-slate-400">AG</div>
+                            <h4 class="font-bold text-slate-800">Aarav Gupta</h4>
+                            <p class="text-xs text-slate-500 mb-6">B.Tech Computer Science (Year 4)</p>
+                            <button onclick="showToast('Profile editing locked.')" class="px-6 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600">Edit Academic Profile</button>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Broadcast Feed (Connected to Faculty Portal) -->
+                        <!-- Broadcast Feed -->
                         <div class="lg:col-span-2 space-y-6">
                             <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
                                 <div class="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -68,38 +195,38 @@
                                         <i data-lucide="radio" class="w-4 h-4 text-emerald-600"></i>
                                         <h3 class="font-bold text-slate-800 text-sm">Campus Broadcasts</h3>
                                     </div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Recent Activity</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Live Updates</span>
                                 </div>
                                 <div id="broadcast-feed" class="flex-1 divide-y divide-slate-100 overflow-y-auto bg-slate-50/20">
-                                    <div class="p-20 text-center">
-                                        <div class="animate-spin rounded-full h-8 w-8 border-2 border-slate-200 border-t-emerald-600 mx-auto mb-4"></div>
-                                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Connecting to Faculty Feed...</p>
-                                    </div>
+                                    <!-- Dynamic content -->
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Sidebar Cards -->
+                        <!-- Side Actions -->
                         <div class="space-y-6">
                             <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8">
-                                <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest mb-6">Primary Mentor</h3>
+                                <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest mb-6">Your Mentor</h3>
                                 <div class="flex items-center gap-4 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50">
                                     <div class="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-indigo-100">VS</div>
                                     <div>
                                         <p class="font-bold text-slate-900">Dr. Vikram Seth</p>
                                         <p class="text-[10px] font-bold text-slate-400 uppercase">CS Dept • HOD</p>
                                         <div class="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-600">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available Now
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Available Now
                                         </div>
                                     </div>
                                 </div>
-                                <button class="w-full mt-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">Schedule Meeting</button>
+                                <button onclick="showToast('Redirecting to appointment calendar...')" class="w-full mt-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">Schedule Meeting</button>
                             </div>
 
-                            <div class="bg-indigo-600 rounded-[2rem] p-8 text-white shadow-xl shadow-indigo-100">
+                            <div class="bg-indigo-600 rounded-[2rem] p-8 text-white shadow-xl shadow-indigo-100 group cursor-pointer overflow-hidden relative">
+                                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                                    <i data-lucide="clock" class="w-20 h-20"></i>
+                                </div>
                                 <h3 class="font-bold text-sm mb-2">Upcoming Deadline</h3>
                                 <p class="text-indigo-100 text-xs mb-4">Project Alpha report submission is due tomorrow.</p>
-                                <button class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all">Submit Now</button>
+                                <button onclick="showToast('Report submission opened.')" class="relative z-10 w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all">Submit Now</button>
                             </div>
                         </div>
                     </div>
@@ -119,9 +246,19 @@
                             <p class="text-xs font-bold text-slate-400 uppercase mb-6">Computer Science Head</p>
                             <div class="flex items-center gap-2 mb-8">
                                 <span class="px-3 py-1 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500">AI/ML</span>
-                                <span class="px-3 py-1 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500">Cloud Computing</span>
+                                <span class="px-3 py-1 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500">Cloud</span>
                             </div>
-                            <button class="w-full py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">Request Mentorship</button>
+                            <button onclick="showToast('Request sent to Dr. Vikram Seth')" class="w-full py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">Request Mentorship</button>
+                        </div>
+                        <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:border-emerald-600 transition-all group">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-600 mb-6 flex items-center justify-center font-black text-white text-xl group-hover:rotate-6 transition-transform">AR</div>
+                            <h4 class="font-bold text-slate-900 text-lg">Prof. Ananya Rao</h4>
+                            <p class="text-xs font-bold text-slate-400 uppercase mb-6">Business Management</p>
+                            <div class="flex items-center gap-2 mb-8">
+                                <span class="px-3 py-1 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500">FinTech</span>
+                                <span class="px-3 py-1 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500">Strategy</span>
+                            </div>
+                            <button onclick="showToast('Request sent to Prof. Ananya Rao')" class="w-full py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">Request Mentorship</button>
                         </div>
                     </div>
                 </div>
@@ -134,7 +271,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        // Firebase Configuration (Same as Faculty Portal)
+        // Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBOSm_MWyZ1phOXRbPFv28JJ-DGMJB2yoI",
             authDomain: "buildit-6c866.firebaseapp.com",
@@ -152,33 +289,82 @@
         window.onload = async () => {
             lucide.createIcons();
             
-            // Seamless anonymous authentication for immediate data access
             try {
                 await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Connection failed:", error);
-            }
+            } catch (e) { console.error(e); }
 
             onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    setupFeedListener();
-                }
+                if (user) setupFeedListener();
             });
         };
 
+        // Tab Switching Logic for Mentorship section
+        window.switchSubTab = (tabId) => {
+            const tabs = ['active', 'pending', 'profile'];
+            tabs.forEach(id => {
+                const btn = document.getElementById('tab-' + id);
+                const view = document.getElementById('sub-v-' + id);
+                
+                if (id === tabId) {
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('tab-inactive');
+                    view.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('tab-inactive');
+                    view.classList.add('hidden');
+                }
+            });
+            lucide.createIcons();
+        };
+
+        // Main Sidebar Navigation
+        window.switchView = (v) => {
+            const dashboard = document.getElementById('v-dashboard');
+            const discover = document.getElementById('v-discover');
+            const navDash = document.getElementById('nav-dashboard');
+            const navDisc = document.getElementById('nav-discover');
+
+            if (v === 'dashboard') {
+                dashboard.classList.remove('hidden');
+                discover.classList.add('hidden');
+                navDash.classList.add('bg-emerald-50', 'text-emerald-700');
+                navDisc.classList.remove('bg-emerald-50', 'text-emerald-700');
+                navDisc.classList.add('text-slate-500');
+            } else {
+                dashboard.classList.add('hidden');
+                discover.classList.remove('hidden');
+                navDisc.classList.add('bg-emerald-50', 'text-emerald-700');
+                navDash.classList.remove('bg-emerald-50', 'text-emerald-700');
+                navDash.classList.add('text-slate-500');
+            }
+            lucide.createIcons();
+        };
+
+        // Toast Feedback System
+        window.showToast = (msg) => {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('opacity-100', 'translate-y-0');
+            t.classList.remove('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => {
+                t.classList.remove('opacity-100', 'translate-y-0');
+                t.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 3000);
+        };
+
+        // Live Feed Listener
         function setupFeedListener() {
-            // SYNCED COLLECTION: Uses the same path as the Faculty Portal
-            const broadcastCol = collection(db, 'artifacts', appId, 'public', 'data', 'broadcasts');
-            const q = query(broadcastCol, orderBy('createdAt', 'desc'), limit(20));
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'broadcasts');
+            const q = query(colRef, orderBy('createdAt', 'desc'), limit(15));
 
             onSnapshot(q, (snapshot) => {
                 const feed = document.getElementById('broadcast-feed');
-                
                 if (snapshot.empty) {
                     feed.innerHTML = `
                         <div class="p-20 text-center text-slate-400">
-                            <i data-lucide="bell-off" class="w-12 h-12 mx-auto mb-4 opacity-20"></i>
-                            <p class="text-xs font-bold uppercase tracking-widest">No broadcasts from faculty yet</p>
+                            <i data-lucide="bell-off" class="w-10 h-10 mx-auto mb-4 opacity-20"></i>
+                            <p class="text-xs font-bold uppercase tracking-widest">No faculty broadcasts</p>
                         </div>
                     `;
                     lucide.createIcons();
@@ -186,47 +372,22 @@
                 }
                 
                 feed.innerHTML = snapshot.docs.map(doc => {
-                    const ann = doc.data();
-                    const date = ann.createdAt ? new Date(ann.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : 'Just now';
-                    
+                    const data = doc.data();
+                    const ts = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now';
                     return `
-                        <div class="p-8 hover:bg-white transition-all group relative">
+                        <div class="p-8 hover:bg-white transition-all group">
                             <div class="flex justify-between items-start mb-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Official Update</span>
-                                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase">${date}</span>
-                                </div>
+                                <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">Official</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">${ts}</span>
                             </div>
-                            <p class="text-sm font-semibold text-slate-800 leading-relaxed pr-4">${ann.content}</p>
-                            <div class="mt-4 flex items-center gap-2">
-                                <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500">${(ann.author || 'F').charAt(0)}</div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">— ${ann.author || 'Academic Faculty'}</p>
-                            </div>
+                            <p class="text-sm font-semibold text-slate-800 leading-relaxed">${data.content}</p>
+                            <p class="mt-4 text-[10px] text-slate-400 font-bold uppercase">— ${data.author || 'University Faculty'}</p>
                         </div>
                     `;
                 }).join('');
-                
                 lucide.createIcons();
-            }, (error) => {
-                console.error("Firestore listener error:", error);
-                document.getElementById('broadcast-feed').innerHTML = '<div class="p-10 text-red-500 text-xs font-bold text-center">Connection Error. Retrying...</div>';
             });
         }
-
-        window.switchView = (v) => {
-            ['dashboard', 'discover'].forEach(id => {
-                document.getElementById('v-' + id).classList.add('hidden');
-                document.getElementById('nav-' + id).classList.remove('bg-emerald-50', 'text-emerald-700');
-                document.getElementById('nav-' + id).classList.add('text-slate-500');
-            });
-
-            document.getElementById('v-' + v).classList.remove('hidden');
-            document.getElementById('nav-' + v).classList.add('bg-emerald-50', 'text-emerald-700');
-            document.getElementById('nav-' + v).classList.remove('text-slate-500');
-            
-            lucide.createIcons();
-        };
     </script>
 </body>
 </html>
