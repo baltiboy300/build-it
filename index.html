@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IILM University | Unified Login</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            letter-spacing: -0.01em;
+        }
         
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn {
@@ -20,31 +21,40 @@
         }
 
         .hidden { display: none !important; }
+
+        .role-card:hover .icon-box {
+            transform: scale(1.05);
+            background-color: rgb(55 48 163); /* indigo-800 */
+            color: white;
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800 flex items-center justify-center p-4">
+<body class="bg-[#f8fafc] min-h-screen text-slate-900 flex items-center justify-center p-4 antialiased">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- App Container -->
-    <div id="app" class="max-w-5xl w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[650px] border border-slate-100 fade-in">
+    <div id="app" class="max-w-5xl w-full bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col md:flex-row min-h-[650px] border border-slate-100 fade-in">
         
         <!-- Left Branding Section -->
-        <div class="md:w-5/12 bg-indigo-600 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+        <div class="md:w-5/12 bg-indigo-900 p-12 text-white flex flex-col justify-between relative overflow-hidden">
             <!-- Decorative Grid Background -->
-            <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                <svg width="100%" height="100%"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>
+            <div class="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+                <svg width="100%" height="100%"><defs><pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M 30 0 L 0 0 0 30" fill="none" stroke="currentColor" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>
             </div>
 
             <div class="relative z-10">
-                <div class="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-sm">
-                    <i data-lucide="graduation-cap" class="w-10 h-10"></i>
+                <div class="bg-white/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-md border border-white/10">
+                    <i data-lucide="graduation-cap" class="w-8 h-8"></i>
                 </div>
-                <h1 class="text-5xl font-extrabold mb-6 leading-tight tracking-tight">IILM<br>University</h1>
-                <p class="text-indigo-100 text-lg font-medium leading-relaxed max-w-xs">One gateway to manage your academic journey, mentorship, and resources.</p>
+                <h1 class="text-5xl font-extrabold mb-6 leading-tight tracking-tighter">IILM<br>University</h1>
+                <p class="text-indigo-200 text-base font-medium leading-relaxed max-w-xs">A unified identity gateway for managing your academic ecosystem and institutional resources.</p>
             </div>
             
-            <div class="relative z-10 pt-8 border-t border-white/10">
-                <div class="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-indigo-200">
-                    <i data-lucide="shield-check" class="w-4 h-4"></i> Secure Cloud Access
+            <div class="relative z-10 pt-8 border-t border-white/5">
+                <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Institutional Security
                 </div>
             </div>
         </div>
@@ -53,89 +63,110 @@
         <div class="md:w-7/12 p-12 flex flex-col justify-center bg-white relative">
             
             <!-- Step 1: Role Selection -->
-            <div id="role-selection" class="space-y-8 max-w-md mx-auto w-full fade-in">
+            <div id="role-selection" class="space-y-8 max-w-sm mx-auto w-full fade-in">
                 <div class="text-center">
-                    <h2 class="text-3xl font-bold text-slate-900">Portal Entry</h2>
-                    <p class="text-slate-500 font-medium">Select your role to access the university hub</p>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Access Portal</h2>
+                    <p class="text-slate-400 text-sm font-medium mt-1">Select your profile to authenticate</p>
                 </div>
                 
-                <div class="space-y-4">
+                <div class="space-y-3">
                     <!-- Admin Option -->
-                    <button onclick="handleRoleSelect('admin')" class="w-full flex items-center gap-5 p-5 border border-slate-200 rounded-2xl hover:border-slate-800 hover:bg-slate-50 transition-all text-left group">
-                        <div class="bg-slate-900 p-3.5 rounded-xl text-white shadow-lg shadow-slate-200">
-                            <i data-lucide="shield" class="w-6 h-6"></i>
+                    <button onclick="handleRoleSelect('admin')" class="role-card w-full flex items-center gap-4 p-4 border border-slate-100 rounded-2xl hover:border-slate-200 hover:bg-slate-50/50 transition-all text-left group">
+                        <div class="icon-box bg-slate-100 p-3 rounded-xl text-slate-600 transition-all shadow-sm">
+                            <i data-lucide="shield" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-slate-800 text-lg">Administrator</div>
-                            <div class="text-xs text-slate-400 font-bold uppercase tracking-wider">System Management</div>
+                            <div class="font-bold text-slate-800 text-sm">Administrator</div>
+                            <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">System Governance</div>
                         </div>
-                        <i data-lucide="chevron-right" class="ml-auto w-5 h-5 text-slate-300 group-hover:text-slate-800 transition-colors"></i>
+                        <i data-lucide="chevron-right" class="ml-auto w-4 h-4 text-slate-200 group-hover:text-slate-900 transition-colors"></i>
                     </button>
 
                     <!-- Mentor Option -->
-                    <button onclick="handleRoleSelect('mentor')" class="w-full flex items-center gap-5 p-5 border border-slate-200 rounded-2xl hover:border-indigo-600 hover:bg-indigo-50/50 transition-all text-left group">
-                        <div class="bg-indigo-100 p-3.5 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                            <i data-lucide="users" class="w-6 h-6"></i>
+                    <button onclick="handleRoleSelect('mentor')" class="role-card w-full flex items-center gap-4 p-4 border border-slate-100 rounded-2xl hover:border-indigo-100 hover:bg-indigo-50/30 transition-all text-left group">
+                        <div class="icon-box bg-indigo-50 p-3 rounded-xl text-indigo-700 transition-all shadow-sm">
+                            <i data-lucide="users" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-slate-800 text-lg">Academic Faculty</div>
-                            <div class="text-xs text-slate-400 font-bold uppercase tracking-wider">Mentor Access</div>
+                            <div class="font-bold text-slate-800 text-sm">Academic Faculty</div>
+                            <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Mentorship Hub</div>
                         </div>
-                        <i data-lucide="chevron-right" class="ml-auto w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors"></i>
+                        <i data-lucide="chevron-right" class="ml-auto w-4 h-4 text-slate-200 group-hover:text-indigo-700 transition-colors"></i>
                     </button>
 
                     <!-- Mentee Option -->
-                    <button onclick="handleRoleSelect('mentee')" class="w-full flex items-center gap-5 p-5 border border-slate-200 rounded-2xl hover:border-emerald-500 hover:bg-emerald-50/50 transition-all text-left group">
-                        <div class="bg-emerald-100 p-3.5 rounded-xl text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                            <i data-lucide="book-open" class="w-6 h-6"></i>
+                    <button onclick="handleRoleSelect('mentee')" class="role-card w-full flex items-center gap-4 p-4 border border-slate-100 rounded-2xl hover:border-slate-100 hover:bg-slate-50 transition-all text-left group">
+                        <div class="icon-box bg-emerald-50 p-3 rounded-xl text-emerald-700 transition-all shadow-sm">
+                            <i data-lucide="book-open" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-slate-800 text-lg">Student Mentee</div>
-                            <div class="text-xs text-slate-400 font-bold uppercase tracking-wider">Academic Portal</div>
+                            <div class="font-bold text-slate-800 text-sm">Student Mentee</div>
+                            <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Learner Dashboard</div>
                         </div>
-                        <i data-lucide="chevron-right" class="ml-auto w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors"></i>
+                        <i data-lucide="chevron-right" class="ml-auto w-4 h-4 text-slate-200 group-hover:text-emerald-600 transition-colors"></i>
                     </button>
                 </div>
 
-                <p class="text-center text-xs text-slate-400 font-medium">
-                    New to IILM? <a href="#" class="text-indigo-600 font-bold hover:underline">Contact registrar office</a>
-                </p>
+                <div class="pt-6 border-t border-slate-50">
+                    <p class="text-center text-[10px] text-slate-400 font-medium">
+                        Technical issues? <a href="#" class="text-indigo-700 font-bold hover:underline underline-offset-4">IT Support Desk</a>
+                    </p>
+                </div>
             </div>
 
-            <!-- Step 2: Verification (Hidden initially) -->
-            <div id="verification-step" class="hidden text-center fade-in max-w-md mx-auto w-full">
-                <button onclick="resetRole()" class="text-slate-500 font-bold text-xs uppercase tracking-widest mb-10 flex items-center gap-2 mx-auto hover:text-indigo-600 transition-colors">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Change Role
+            <!-- Step 2: Verification -->
+            <div id="verification-step" class="hidden text-center fade-in max-w-sm mx-auto w-full">
+                <button onclick="resetRole()" class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-10 flex items-center gap-2 mx-auto hover:text-slate-900 transition-colors">
+                    <i data-lucide="arrow-left" class="w-3 h-3"></i> Return to Roles
                 </button>
                 
-                <h2 id="role-title" class="text-3xl font-bold text-slate-900 mb-2">Security Check</h2>
-                <p id="role-subtitle" class="text-slate-500 font-medium mb-8">Verification required for faculty access</p>
+                <h2 id="role-title" class="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Security Check</h2>
+                <p id="role-subtitle" class="text-slate-400 text-sm font-medium mb-10">Verification required for academic personnel</p>
                 
-                <div class="flex justify-center mb-10 bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
+                <div class="flex justify-center mb-10 bg-[#fbfcfd] p-8 rounded-3xl border border-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                     <!-- Phone/Email Verify Component -->
                     <div class="pe_verify_email" data-client-id="13401266232106403409"></div>
                 </div>
 
-                <div class="space-y-2">
-                    <p class="text-xs text-slate-400 font-medium">Encryption Active • AES-256</p>
+                <div class="flex items-center justify-center gap-2 text-slate-300">
+                    <i data-lucide="lock" class="w-3 h-3"></i>
+                    <p class="text-[10px] font-bold uppercase tracking-widest">Encrypted Auth Session</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Notification Overlay (Simulated) -->
-    <div id="loading-overlay" class="hidden fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center fade-in">
-        <div class="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-indigo-600 mb-4"></div>
-        <p class="text-slate-500 font-bold text-xs uppercase tracking-widest animate-pulse">Redirecting to Secure Portal...</p>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center fade-in">
+        <div class="animate-spin rounded-full h-8 w-8 border-2 border-slate-100 border-t-indigo-700 mb-4"></div>
+        <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] animate-pulse">Securing Identity Profile</p>
     </div>
 
     <script>
-        // Initialize Lucide Icons
         lucide.createIcons();
 
+        const ALLOWED_DOMAIN = "@iilm.edu";
         let selectedRole = null;
 
-        // Script Loader for Phone/Email verification
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `fade-in p-4 rounded-2xl shadow-2xl flex items-center gap-3 bg-white border border-slate-100 pointer-events-auto min-w-[300px] border-l-4 ${type === 'error' ? 'border-l-red-500' : 'border-l-indigo-500'}`;
+            toast.innerHTML = `
+                <div class="${type === 'error' ? 'text-red-500' : 'text-indigo-500'}">
+                    <i data-lucide="${type === 'error' ? 'alert-circle' : 'shield-check'}" class="w-4 h-4"></i>
+                </div>
+                <p class="text-xs font-bold text-slate-700">${message}</p>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
+
         function loadVerificationScript() {
             if (!document.getElementById('phone-email-script')) {
                 const script = document.createElement('script');
@@ -146,18 +177,17 @@
             }
         }
 
-        // Handle Role Click
         window.handleRoleSelect = (role) => {
             selectedRole = role;
             const titles = {
                 'admin': 'Admin Control',
-                'mentor': 'Faculty Verification',
+                'mentor': 'Faculty Identity',
                 'mentee': 'Student Identity'
             };
             const subtitles = {
-                'admin': 'Verify your administrative authority',
-                'mentor': 'Faculty member authentication required',
-                'mentee': 'Enter your student credentials to proceed'
+                'admin': 'Please verify your administrative domain',
+                'mentor': 'Identity check for @iilm.edu faculty',
+                'mentee': 'Student portal authentication session'
             };
 
             document.getElementById('role-title').innerText = titles[role];
@@ -169,24 +199,26 @@
             loadVerificationScript();
         };
 
-        // Go Back
         window.resetRole = () => {
             selectedRole = null;
             document.getElementById('verification-step').classList.add('hidden');
             document.getElementById('role-selection').classList.remove('hidden');
         };
 
-        // Callback from phone.email script
         window.phoneEmailReceiver = (userObj) => {
-            if (!userObj) return;
+            if (!userObj || !userObj.user_email_id) return;
             
-            console.log("Verified User:", userObj);
+            const email = userObj.user_email_id.toLowerCase();
+            
+            // DOMAIN SECURITY ENFORCEMENT
+            if (!email.endsWith(ALLOWED_DOMAIN)) {
+                showToast(`Security Violation: Access is restricted to ${ALLOWED_DOMAIN} accounts.`);
+                return;
+            }
+            
             document.getElementById('loading-overlay').classList.remove('hidden');
-            
-            // Capture the current role to ensure consistency during the timeout
             const currentRole = selectedRole;
             
-            // Redirection logic based on selected role
             setTimeout(() => {
                 const portals = {
                     'admin': 'iilmadmin.html',
@@ -195,19 +227,14 @@
                 };
                 
                 const targetFile = portals[currentRole];
-                
                 if (targetFile) {
-                    console.log("Navigating to:", targetFile);
-                    // Using a relative path to help the browser identify the local file
                     window.location.href = "./" + targetFile;
                 } else {
-                    console.error("Redirection error: No target file mapped for role:", currentRole);
                     document.getElementById('loading-overlay').classList.add('hidden');
-                    alert("Redirection failed: Portal destination not found. Please select a role and try again.");
+                    showToast("Portal destination not found. Please try again.");
                 }
-            }, 1500);
+            }, 1200);
         };
     </script>
 </body>
-
 </html>
